@@ -11,4 +11,15 @@ class Input {
     function getLines() {
         return explode("\n", $this->rawfile);
     }
+
+
+    function get2dArrayBySpaces() {
+        $lines = [];
+        foreach($this->getLines() as $line){
+            if(trim($line) === '') continue;
+            preg_match_all('/\S+/', $line, $matches);
+            $lines[] = $matches[0];
+        }
+        return $lines;
+    }
 }
