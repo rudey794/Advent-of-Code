@@ -2,24 +2,77 @@
    function solve($file){
       $lines = parse($file);
       echo "part1: " . part1($lines) . "\n";
+      $lines = parse($file, 2);
+      echo "part2: " . part2($lines) . "\n";
    }
    function part1($lines){
       [$transposed, $operators] = transpose($lines);
       $total = 0;
       foreach($operators as $key=>$operator){
-         $result = 0;
-         switch($operator){
-            case "+":
-               $result = array_sum($transposed[$key]);
-               break;
-            case "*":
-               $result = array_product($transposed[$key]);
-               break;
-         }
-         $total += $result;
+         $total += calculate_result($transposed[$key], $operator);
       }
       return $total;
    }
+
+   function part2($lines) {
+      $width = max(array_map('strlen', $lines));
+      foreach($lines as &$line){
+         $line = str_pad($line, $width);
+      }
+      unset($line);
+
+      $operators = array_pop($lines);
+
+      // make sure lines are all the the same length
+
+		$currentNumbers = [];
+		$currentOperator = '';
+		$total = 0;
+      for($i = 0; $i < $width; $i++) {
+			$number = '';
+			foreach($lines as $line) {
+				$number .= $line[$i];
+			}
+
+			$operator = $operators[$i];
+			
+			if (empty(trim($number)) && empty(trim($operator))) {
+				$result = calculate_result($currentNumbers, $currentOperator);
+				echo "Result for operator '$currentOperator' with numbers [" . implode(", ", $currentNumbers) . "] = $result\n";
+				$total += $result;
+				$currentNumbers = [];
+				$currentOperator = '';
+				continue;
+			
+			}
+
+			if(!empty($number)) {
+				$currentNumbers[] = (int)$number;
+			}
+
+			if(in_array($operator, ['+', '*'])) {
+				$currentOperator = $operator;
+			}
+
+      }
+		$result = calculate_result($currentNumbers, $currentOperator);
+		echo "Result for operator '$currentOperator' with numbers [" . implode(", ", $currentNumbers) . "] = $result\n";
+		$total += $result;
+
+		return $total;
+   }
+
+	function calculate_result($numbers, $operator) {
+		if($operator == "+"){
+			return array_sum($numbers);
+		} elseif($operator == "*") {
+			return array_product($numbers);
+		}
+		
+		var_dump($numbers, $operator);
+		return 0;
+	}
+
    function transpose($lines){
       $transposed = [];
       $operators = [];
@@ -34,10 +87,13 @@
       }
       return [$transposed, $operators];
    }
-   function parse($filename){
+   function parse($filename, $part=1){
       $content = file_get_contents($filename);
       if($content === false) return [];
       $rawLines = preg_split('/\R/', trim($content));
+
+      if($part === 2) return $rawLines;
+
       $lines = [];
       foreach($rawLines as $line){
          if(trim($line) === '') continue;
